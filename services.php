@@ -10,12 +10,12 @@
 	$entity_body = file_get_contents('php://input');
 	$json = json_decode($entity_body,true);
 	$params = getDataRequest($json);
-	$email_coworker = getDataCoworker($protocol_security,$login,$pass,$url_cowerkers,$params['id_contact']);
 
+	$email_coworker = getDataCoworker($protocol_security,$login,$pass,$url_cowerkers,$params['id_contact']);
 	$contact_id = getIdContact($token,$email_coworker);
 	$contact = getDataContact($token,$contact_id);
 	$account = getDataAccount($token,$contact['account_id']);
-        
+    
 	$products_i = getProductsInvoices($protocol,$login,$pass,$url,$params);
 	$products_invoices = proccessProductInvoice($products_i);
 	$products = getProducts($token);
@@ -23,6 +23,10 @@
        
 	insertInvoices($token,$params,$account,$contact,$products_xml);
 
+	//$file = fopen("test.txt", "w");
+    //fwrite($file, "entity_body => " .$entity_body. PHP_EOL);
+    //fclose($file);
+	
 	function getDataRequest($json){
 		$params = array(
 			'email' => $json[0]['UpdatedBy'],
@@ -38,13 +42,13 @@
 
 		return $params;	
 	}
-	
+
 	function getDataCoworker($protocol_security,$login,$pass,$url_cowerkers,$contact_coworker){
 		$content = file_get_contents($protocol_security.$login.':'.$pass.'@'.$url_cowerkers.$contact_coworker); 
 		$data = json_decode($content, true);
 		return $data['Records'][0]['Email'];
 	}
-	
+
 	function getIdContact($token,$email){
 		$select_columns = 'Contacts(contactid)';
 		$search_column = 'email';
@@ -62,13 +66,38 @@
 		$url = 'https://crm.zoho.com/crm/private/json/Contacts/getRecordById?&authtoken='.$token.'&scope=crmapi&id='.$contact_id;
 		$entity_body = file_get_contents($url);
 		$data = json_decode($entity_body, true);
+
+		$data_array = $data['response']['result']['Contacts']['row']['FL'];
+		$contact_id = '';
+		$name = '';
+		$lastname = '';
+		$email = '';
+		$account_id = '';
+		$account_name = '';
+
+	    for ($i=0; $i < count($data_array); $i++) { 
+	    	if ($data_array[$i]['val'] == 'CONTACTID') {
+	    		$contact_id = $data_array[$i]['content'];
+	    	} elseif ($data_array[$i]['val'] == 'First Name') {
+	    		$name = $data_array[$i]['content'];
+	    	} elseif ($data_array[$i]['val'] == 'Last Name') {
+	    		$lastname = $data_array[$i]['content'];
+	    	} elseif ($data_array[$i]['val'] == 'Email') {
+	    		$email = $data_array[$i]['content'];
+	    	} elseif ($data_array[$i]['val'] == 'ACCOUNTID') {
+	    		$account_id = $data_array[$i]['content'];
+	    	} elseif ($data_array[$i]['val'] == 'Account Name') {
+	    		$account_name = $data_array[$i]['content'];
+	    	}
+	    }
+		
 		$contact = array(
-				'contact_id' => $data['response']['result']['Contacts']['row']['FL'][0]['content'],
-				'name' => $data['response']['result']['Contacts']['row']['FL'][3]['content'],
-				'lastname' => $data['response']['result']['Contacts']['row']['FL'][4]['content'],
-				'email' => $data['response']['result']['Contacts']['row']['FL'][7]['content'],
-				'account_id' => $data['response']['result']['Contacts']['row']['FL'][5]['content'], 
-				'account_name' => $data['response']['result']['Contacts']['row']['FL'][6]['content']
+				'contact_id' => $contact_id,
+				'name' => $name,
+				'lastname' => $lastname,
+				'email' => $email,
+				'account_id' => $account_id, 
+				'account_name' => $account_name
 				);
 			
 		return $contact;
@@ -78,14 +107,42 @@
 		$url = 'https://crm.zoho.com/crm/private/json/Accounts/getRecordById?&authtoken='.$token.'&scope=crmapi&id='.$account_id;
 		$entity_body = file_get_contents($url);
 		$data = json_decode($entity_body, true);
+		
+		$data_array = $data['response']['result']['Accounts']['row']['FL'];
+		$account_id = '';
+		$account_name = '';
+		$giro = '';
+		$razon_social = '';
+		$RUT = '';
+		$address = '';
+		$comuna = '';
+
+		for ($i=0; $i < count($data_array); $i++) { 
+	    	if ($data_array[$i]['val'] == 'ACCOUNTID') {
+	    		$account_id = $data_array[$i]['content'];
+	    	} elseif ($data_array[$i]['val'] == 'Account Name') {
+	    		$account_name = $data_array[$i]['content'];
+	    	} elseif ($data_array[$i]['val'] == 'Giro') {
+	    		$giro = $data_array[$i]['content'];
+	    	} elseif ($data_array[$i]['val'] == 'Razón Social') {
+	    		$razon_social = $data_array[$i]['content'];
+	    	} elseif ($data_array[$i]['val'] == 'RUT') {
+	    		$RUT = $data_array[$i]['content'];
+	    	} elseif ($data_array[$i]['val'] == 'Dirección') {
+	    		$address = $data_array[$i]['content'];
+	    	} elseif ($data_array[$i]['val'] == 'Comuna') {
+	    		$comuna = $data_array[$i]['content'];
+	    	}
+	    }
+
 		$account = array(
-				'account_id' => $data['response']['result']['Accounts']['row']['FL'][0]['content'],
-				'account_name' => $data['response']['result']['Accounts']['row']['FL'][3]['content'],
-				'giro' => $data['response']['result']['Accounts']['row']['FL'][11]['content'],
-				'razon_social' => $data['response']['result']['Accounts']['row']['FL'][13]['content'],
-				'RUT' => $data['response']['result']['Accounts']['row']['FL'][14]['content'],
-				'address' => $data['response']['result']['Accounts']['row']['FL'][16]['content'],
-				'comuna' => $data['response']['result']['Accounts']['row']['FL'][15]['content']
+				'account_id' => $account_id,
+				'account_name' => $account_name,
+				'giro' => $giro,
+				'razon_social' => $razon_social,
+				'RUT' => $RUT,
+				'address' => $address,
+				'comuna' => $comuna
 			);
 
 		return $account;
@@ -121,7 +178,7 @@
 
 		return $data;
 	}
-	
+
 	function getProducts($token){
 		$url = 'https://crm.zoho.com/crm/private/json/Products/getRecords?authtoken='.$token.'&scope=crmapi&fromIndex=1&toIndex=200';
 		$entity_body = file_get_contents($url);
@@ -177,9 +234,7 @@
 
 	function insertInvoices($token,$params,$account,$contact,$products_xml){
 		$param = '<Invoices><row no="1"><FL val="Invoice Date">'.date('m/d/Y').'</FL><FL val="Fecha de Pre Factura">'.date('m/d/Y').'</FL><FL val="Subject">'.$params['subject'].'</FL><FL val="Account Name">'.$account['account_name'].'</FL><FL val="ACCOUNTID">'.$account['account_id'].'</FL><FL val="Estado de Pago">Pendiente de Pago</FL><FL val="RUT">'.$account['RUT'].'</FL><FL val="Rut empresa">'.$account['RUT'].'</FL><FL val="Email Notificación">'.$contact['email'].'</FL><FL val="Product Details">'.$products_xml.'</FL><FL val="Sub Total">'.$params['sub_total'].'</FL><FL val="Tax">'.$params['tax'].'</FL><FL val="Grand Total">'.$params['total'].'</FL><FL val="Total a Pagar">'.$params['total'].'</FL><FL val="Razón Social">'.$account['razon_social'].'</FL><FL val="Dirección">'.$account['address'].'</FL><FL val="Giro">'.$account['giro'].'</FL><FL val="Tipo Factura">Afecta</FL><FL val="Factura Nexus Asociada">'.$params['invoice_number'].'</FL><FL val="Id Factura Nexus">'.$params['invoices_id'].'</FL></row></Invoices>';
-        //$file = fopen("test.txt", "w");
-        //fwrite($file, "param => " .$param. PHP_EOL);
-        //fclose($file);
+        
 		header('Location: https://crm.zoho.com/crm/private/xml/Invoices/insertRecords?newFormat=1&authtoken='.$token.'&scope=crmapi&xmlData='.$param);
 	
 	}
