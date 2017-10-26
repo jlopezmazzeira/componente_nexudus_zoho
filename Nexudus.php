@@ -28,12 +28,6 @@ class Nexudus {
 			$json_request = json_decode($request,true);
 			$invoice_id = $json_request[0]['Id'];
 			$invoice_number = $json_request[0]['InvoiceNumber'];
-			$file = fopen("log.txt", "a");
-			fwrite($file, '-----------INICIO-------------' . PHP_EOL);
-			fwrite($file, $invoice_id . PHP_EOL);
-			fwrite($file, $invoice_number . PHP_EOL);
-			fwrite($file, '-----------FIN----------------' . PHP_EOL);
-			fclose($file);
 			if (!empty($invoice_id)) {
 				$url = $this->getPrefixUrl().$this->getUrlInvoice().$invoice_id;
 				$content = $this->getData($url);
