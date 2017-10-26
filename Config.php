@@ -4,9 +4,9 @@
 */
 class Config {
 	
-	const TOKEN = 'f9d91f8e20ede6e7db05d230cde4563a'; 
-	const PASS = 'Launch247'; 
-	const USER = 'gonzalo@launchcoworking.cl';
+	const TOKEN = '*******************'; 
+	const PASS = '***************'; 
+	const USER = '************';
 	const PROTOCOL_HTTP = 'http://';
 	const PROTOCOL_HTTPS = 'https://';
 	const SCOPE = 'crmapi';
@@ -19,7 +19,6 @@ class Config {
 	const MAIL_PASSWORD = '******';
 	const MAIL_FROM = 'email@gmail.com';
 	const MAIL_FROM_NAME = 'LAUNCH coworking';
-	//const MAIL_CC = ['holley@launchcoworking.cl', 'milari@launchcoworking.cl', 'gonzalo@launchcoworking.cl'];
 	
 	public static function getToken(){ 
 		return self::TOKEN; 
